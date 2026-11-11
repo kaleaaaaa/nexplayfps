@@ -32,6 +32,7 @@ canvas{display:block}
 #help{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);font-size:12px;line-height:1.8;text-align:center;text-shadow:1px 1px 4px black}
 #crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px;font-weight:bold;text-shadow:0 0 4px black}
 #scopeOverlay{display:none;position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at center,transparent 0 28.5vmin,rgba(0,0,0,.97) 29vmin)}
+#frostOverlay{display:none;position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 140px 45px rgba(120,210,255,.5);background:rgba(190,235,255,.08)}
 #scopeOverlay:before,#scopeOverlay:after{content:"";position:absolute;background:rgba(20,20,20,.9);left:50%;top:50%;transform:translate(-50%,-50%)}
 #scopeOverlay:before{width:1px;height:58vmin}#scopeOverlay:after{height:1px;width:58vmin}
 #scopeOverlay .scope-ring{position:absolute;left:50%;top:50%;width:58vmin;height:58vmin;transform:translate(-50%,-50%);border:2px solid #171717;border-radius:50%;box-shadow:0 0 0 2px #7778,inset 0 0 12px #0008}
@@ -203,6 +204,7 @@ button{background:#f4b400;border:0;border-radius:8px;padding:15px 40px;font-size
  <button id="ffaExit" type="button" title="Press Escape to release the mouse, then click to leave Free For All">EXIT</button>
  <div id="crosshair">+</div>
  <div id="scopeOverlay" aria-hidden="true"><div class="scope-ring"></div></div>
+ <div id="frostOverlay" aria-hidden="true"></div>
  <div id="hitmarker">×</div>
  <div id="prompt"></div>
  <div id="toast"></div>
@@ -254,6 +256,7 @@ button{background:#f4b400;border:0;border-radius:8px;padding:15px 40px;font-size
    <button class="armory-tab" data-tab="cosmetics" type="button">CHARACTER</button>
    <button class="armory-tab" data-tab="titles" type="button">TITLES</button>
    <button class="armory-tab" data-tab="shop" type="button">COIN SHOP</button>
+   <button class="armory-tab" data-tab="winter" type="button">❄ WINTER SHOP</button>
   </div>
   <div id="armoryItems"></div>
   <div id="armoryNotice">Choose an item to equip it. Unlocks are saved to your profile.</div>
@@ -511,13 +514,13 @@ function renderAdminTab() {
     adminContent.querySelectorAll("[data-close-server]").forEach(button => button.addEventListener("click", () => adminServerAction("adminCloseServer", button.dataset.closeServer, "Close this server and remove everyone?")));
   } else if (adminActiveTab === "tools") {
     const grantEnabled = !!adminSnapshotData.adminGunGrantsEnabled;
-    adminContent.innerHTML = `<div class="admin-section-title">GLOBAL ANNOUNCEMENT</div><input id="adminAnnouncementText" maxlength="180" placeholder="Message to display to all players"><button class="admin-primary" id="adminSendAnnouncement">SEND ANNOUNCEMENT</button><div class="admin-section-title">PLAYER PROGRESSION</div><input id="adminXpName" maxlength="16" placeholder="Player name"><input id="adminXpAmount" type="number" min="1" max="10000" value="100" placeholder="XP amount"><button class="admin-primary" id="adminGiveXp">GRANT XP</button><div class="admin-section-title">GRANT ANY GAME ITEM</div><input id="adminItemName" maxlength="16" placeholder="Player name"><select id="adminItemId"><option value="skin_crimson">Crimson Finish</option><option value="skin_arctic">Arctic Finish</option><option value="cosmetic_scout">Scout Outfit</option><option value="title_champion">Champion Title</option><option value="skin_neon">Neon Finish</option><option value="skin_abyss">Abyss Finish</option><option value="title_veteran">Veteran Title</option><option value="title_legend">Legend Title</option><option value="weapon_smg">SMG</option><option value="cosmetic_urban_camo">Urban Camo</option><option value="cosmetic_elite_armor">Elite Armor</option><option value="weapon_admin_gun">UNBUYABLE ADMIN GUN</option><option value="skin_admin">UNBUYABLE ADMIN GUN SKIN</option><option value="cosmetic_admin_player">UNBUYABLE ADMIN PLAYER SKIN</option><option value="weapon_assault_rifle">Assault Rifle</option><option value="weapon_pistol">Pistol</option></select><button class="admin-primary" id="adminGrantItemButton">GRANT ITEM</button><div id="adminGrantItemResult" class="admin-meta" aria-live="polite"></div><div class="admin-section-title">ADMIN GUN DISTRIBUTION</div><div class="admin-note">${grantEnabled ? "Admin gun grants are ENABLED." : "Admin gun grants are DISABLED."} Only the authenticated owner can change this switch. When disabled, the admin gun cannot be newly granted.</div><button class="admin-primary" id="adminToggleGunGrants">${grantEnabled ? "DISABLE ADMIN GUN GRANTS" : "ENABLE ADMIN GUN GRANTS"}</button><div class="admin-meta">The admin gun is never sold in the shop. Granting an item adds it to the player's saved inventory.</div>`;
+    adminContent.innerHTML = `<div class="admin-section-title">GLOBAL ANNOUNCEMENT</div><input id="adminAnnouncementText" maxlength="180" placeholder="Message to display to all players"><button class="admin-primary" id="adminSendAnnouncement">SEND ANNOUNCEMENT</button><div class="admin-section-title">PLAYER PROGRESSION</div><input id="adminXpName" maxlength="16" placeholder="Player name"><input id="adminXpAmount" type="number" min="1" max="10000" value="100" placeholder="XP amount"><button class="admin-primary" id="adminGiveXp">GRANT XP</button><div class="admin-section-title">GRANT ANY GAME ITEM</div><input id="adminItemName" maxlength="16" placeholder="Player name"><select id="adminItemId"><option value="skin_crimson">Crimson Finish</option><option value="skin_arctic">Arctic Finish</option><option value="cosmetic_scout">Scout Outfit</option><option value="title_champion">Champion Title</option><option value="skin_neon">Neon Finish</option><option value="skin_abyss">Abyss Finish</option><option value="title_veteran">Veteran Title</option><option value="title_legend">Legend Title</option><option value="weapon_smg">SMG</option><option value="cosmetic_urban_camo">Urban Camo</option><option value="cosmetic_elite_armor">Elite Armor</option><option value="weapon_admin_gun">UNBUYABLE ADMIN GUN</option><option value="skin_admin">UNBUYABLE ADMIN GUN SKIN</option><option value="cosmetic_admin_player">UNBUYABLE ADMIN PLAYER SKIN</option><option value="weapon_assault_rifle">Assault Rifle</option><option value="weapon_pistol">Pistol</option><option value="weapon_sniper">Bolt-Action Sniper</option><option value="weapon_shockwave_revolver">Shockwave Revolver</option><option value="weapon_frost_ray">Frost Ray (Winter)</option><option value="title_frosty">Frosty Title (Winter)</option><option value="skin_snow_camo">Snow Camo Skin (Winter)</option></select><button class="admin-primary" id="adminGrantItemButton">GRANT ITEM</button><div id="adminGrantItemResult" class="admin-meta" aria-live="polite"></div><div class="admin-section-title">ADMIN GUN DISTRIBUTION</div><div class="admin-note">${grantEnabled ? "Admin gun grants are ENABLED." : "Admin gun grants are DISABLED."} Only the authenticated owner can change this switch. When disabled, the admin gun cannot be newly granted.</div><button class="admin-primary" id="adminToggleGunGrants">${grantEnabled ? "DISABLE ADMIN GUN GRANTS" : "ENABLE ADMIN GUN GRANTS"}</button><div class="admin-meta">The admin gun is never sold in the shop. Granting an item adds it to the player's saved inventory.</div>`;
     document.getElementById("adminSendAnnouncement").addEventListener("click", adminSendAnnouncement);
     document.getElementById("adminGiveXp").addEventListener("click", adminGrantTypedXp);
     document.getElementById("adminGrantItemButton").addEventListener("click", adminGrantItem);
     document.getElementById("adminToggleGunGrants").addEventListener("click", adminToggleGunGrants);
   } else if (adminActiveTab === "economy") {
-    adminContent.innerHTML = `<div class="admin-note"><b>Coin management</b><br>Changes are saved to the same Supabase coin balance used by the shop. Use a positive amount to grant coins or a negative amount to remove them.</div><div class="admin-section-title">ADJUST PLAYER BALANCE</div><input id="adminCoinName" maxlength="16" placeholder="Player name"><input id="adminCoinAmount" type="number" min="-1000000" max="1000000" value="100" placeholder="Coin amount (+ or -)"><button class="admin-primary" id="adminAdjustCoinsButton">UPDATE COINS</button><div id="adminCoinResult" class="admin-meta" aria-live="polite"></div><div class="admin-section-title">SHOP ITEMS</div><div class="admin-item"><strong>Crimson Finish</strong><div class="admin-meta">300 coins · skin_crimson</div></div><div class="admin-item"><strong>Arctic Finish</strong><div class="admin-meta">600 coins · skin_arctic</div></div><div class="admin-item"><strong>Scout Outfit</strong><div class="admin-meta">800 coins · cosmetic_scout</div></div><div class="admin-item"><strong>Champion Title</strong><div class="admin-meta">500 coins · title_champion</div></div>`;
+    adminContent.innerHTML = `<div class="admin-note"><b>Coin management</b><br>Changes are saved to the same Supabase coin balance used by the shop. Use a positive amount to grant coins or a negative amount to remove them.</div><div class="admin-section-title">ADJUST PLAYER BALANCE</div><input id="adminCoinName" maxlength="16" placeholder="Player name"><input id="adminCoinAmount" type="number" min="-1000000" max="1000000" value="100" placeholder="Coin amount (+ or -)"><button class="admin-primary" id="adminAdjustCoinsButton">UPDATE COINS</button><div id="adminCoinResult" class="admin-meta" aria-live="polite"></div><div class="admin-section-title">SHOP ITEMS</div><div class="admin-item"><strong>Crimson Finish</strong><div class="admin-meta">300 coins · skin_crimson</div></div><div class="admin-item"><strong>Arctic Finish</strong><div class="admin-meta">600 coins · skin_arctic</div></div><div class="admin-item"><strong>Scout Outfit</strong><div class="admin-meta">800 coins · cosmetic_scout</div></div><div class="admin-item"><strong>Champion Title</strong><div class="admin-meta">500 coins · title_champion</div></div><div class="admin-item"><strong>Bolt-Action Sniper</strong><div class="admin-meta">1,500 coins · weapon_sniper</div></div><div class="admin-item"><strong>Shockwave Revolver</strong><div class="admin-meta">3,000 coins · weapon_shockwave_revolver</div></div><div class="admin-section-title">WINTER SHOP ITEMS</div><div class="admin-item"><strong>Frost Ray</strong><div class="admin-meta">2,000 coins · weapon_frost_ray</div></div><div class="admin-item"><strong>Frosty Title</strong><div class="admin-meta">500 coins · title_frosty</div></div><div class="admin-item"><strong>Snow Camo Skin</strong><div class="admin-meta">1,000 coins · skin_snow_camo</div></div>`;
     document.getElementById("adminAdjustCoinsButton").addEventListener("click", adminAdjustCoins);
   }
 }
@@ -680,6 +683,11 @@ const SHOP_ITEMS = [
  {id:"weapon_shockwave_revolver",name:"Shockwave Revolver",detail:"A powerful secondary that launches you upward and forward when fired at the ground.",price:3000,category:"weapon"},
  {id:"weapon_sniper",name:"Bolt-Action Sniper",detail:"A high-damage precision rifle with a 5-round magazine and optical scope.",price:1500,category:"weapon"}
 ];
+const WINTER_ITEMS = [
+ {id:"weapon_frost_ray",name:"Frost Ray",detail:"Does no damage, but anyone you hit is slowed for 3.5 seconds before returning to normal speed.",price:2000,category:"weapon"},
+ {id:"title_frosty",name:"Frosty Title",detail:"Display a white FROSTY title beside your player name.",price:500,category:"title"},
+ {id:"skin_snow_camo",name:"Snow Camo Weapon Skin",detail:"A fully white weapon finish.",price:1000,category:"skin"}
+];
 const REWARDS = [
  { level:2, id:"secondary_slot", name:"Secondary Weapon Slot", detail:"Unlocks a second weapon slot and the sidearm slot.", type:"slot" },
  { level:5, id:"neon_skin", name:"Neon Weapon Skin", detail:"A bright cyan finish for your weapons.", type:"skin" },
@@ -697,6 +705,7 @@ const ITEMS = {
   { id:"shockwave_revolver", name:"Shockwave Revolver", detail:"Fire at the ground to blast yourself upward and forward. Secondary weapon. Purchase for 3,000 coins.", unlock:9999, slot:"secondary", shop:true },
   { id:"smg", name:"SMG", detail:"Fast-firing compact weapon.", unlock:10, slot:"either" },
   { id:"sniper", name:"Bolt-Action Sniper", detail:"High-damage precision rifle with a 5-round magazine and optical scope. Purchase for 1,500 coins.", unlock:9999, slot:"either", shop:true },
+  { id:"frost_ray", name:"Frost Ray", detail:"Does no damage, but slows anyone it hits for 3.5 seconds. Winter Shop, 2,000 coins.", unlock:9999, slot:"either", shop:true, shopTab:"winter" },
   { id:"admin_gun", name:"ADMIN GUN", detail:"Unbuyable owner-granted weapon. Extremely fast firing.", unlock:9999, slot:"primary", admin:true }
  ],
  skins: [
@@ -705,6 +714,7 @@ const ITEMS = {
   { id:"abyss", name:"Abyss Finish", detail:"Exclusive deep-blue weapon finish.", unlock:75 },
   { id:"crimson", name:"Crimson Finish", detail:"A deep red weapon finish.", unlock:1, shop:true },
   { id:"arctic", name:"Arctic Finish", detail:"A clean ice-white weapon finish.", unlock:1, shop:true },
+  { id:"snow_camo", name:"Snow Camo", detail:"A fully white weapon finish. Winter Shop, 1,000 coins.", unlock:9999, shop:true, shopTab:"winter" },
   { id:"admin", name:"ADMIN Finish", detail:"Unbuyable black-and-white finish with ADMIN lettering.", unlock:9999, admin:true }
  ],
  cosmetics: [
@@ -718,7 +728,8 @@ const ITEMS = {
   { id:"", name:"No Title", detail:"Hide your player title.", unlock:1 },
   { id:"veteran", name:"Veteran", detail:"Show the VETERAN title.", unlock:5 },
   { id:"legend", name:"Legend", detail:"Show the exclusive LEGEND title.", unlock:150 },
-  { id:"champion", name:"Champion", detail:"Show the CHAMPION title.", unlock:1, shop:true }
+  { id:"champion", name:"Champion", detail:"Show the CHAMPION title.", unlock:1, shop:true },
+  { id:"frosty", name:"Frosty", detail:"Show the white FROSTY title. Winter Shop, 500 coins.", unlock:9999, shop:true, shopTab:"winter" }
  ]
 };
 function hasReward(level) { return (currentProfile.level || 1) >= level; }
@@ -817,7 +828,7 @@ function armoryWeaponCard(item, owned) {
     button.disabled = equipped || (!owned && !shopLocked) || (!slotUnlocked && !shopLocked);
     if (shopLocked) {
       button.disabled = false;
-      button.addEventListener("click", () => { armoryTab = "shop"; renderArmory(); });
+      button.addEventListener("click", () => { armoryTab = item.shopTab || "shop"; renderArmory(); });
     } else if (owned && slotUnlocked && !equipped) {
       button.addEventListener("click", () => {
         currentLoadout[slot] = item.id;
@@ -854,11 +865,12 @@ function renderArmory() {
     ITEMS.cosmetics.filter(item=>!item.admin || ownsItem("cosmetic_admin_player")).forEach(item=>{const owned=item.admin ? ownsItem("cosmetic_admin_player") : hasUnlock(item.unlock,"cosmetic_"+item.id);add(armoryCard(item,{label:"EQUIP COSMETIC",run:()=>{if(item.admin&&!ownsItem("cosmetic_admin_player")){showToast("ADMIN PLAYER SKIN NOT OWNED");return;}currentLoadout.cosmetic=item.id;saveLoadout();}},currentLoadout.cosmetic===item.id,!owned));});
   } else if (armoryTab === "titles") {
     ITEMS.titles.forEach(item=>{const owned=hasUnlock(item.unlock,"title_"+item.id);add(armoryCard(item,{label:"EQUIP TITLE",run:()=>{currentLoadout.title=item.id;saveLoadout();}},currentLoadout.title===item.id,!owned));});
-  } else if (armoryTab === "shop") {
-    SHOP_ITEMS.forEach(item=>{
+  } else if (armoryTab === "shop" || armoryTab === "winter") {
+    const winter = armoryTab === "winter";
+    (winter ? WINTER_ITEMS : SHOP_ITEMS).forEach(item=>{
       const owned=(currentProfile.ownedItems||[]).includes(item.id);
       const card=document.createElement("div");card.className="armory-item";
-      const rarity=document.createElement("div");rarity.className="rarity";rarity.textContent=owned?"OWNED":"COIN SHOP";
+      const rarity=document.createElement("div");rarity.className="rarity";rarity.textContent=owned?"OWNED":(winter?"WINTER SHOP":"COIN SHOP");
       const title=document.createElement("h3");title.textContent=item.name;
       const detail=document.createElement("p");detail.textContent=item.detail;
       const button=document.createElement("button");button.type="button";button.textContent=owned?"OWNED":`BUY · ${item.price} COINS`;button.disabled=owned;
@@ -1047,7 +1059,7 @@ function createRemotePlayer(data) {
     nameContext.strokeStyle = "rgba(0,0,0,0.9)";
     if (title) {
       nameContext.font = "bold 26px Arial";
-      nameContext.fillStyle = "#ffd45a";
+      nameContext.fillStyle = String(title).toLowerCase() === "frosty" ? "#ffffff" : "#ffd45a";
       nameContext.fillText(String(title).toUpperCase(), 256, 39, 460);
     }
     nameContext.font = "bold 48px Arial";
@@ -1261,8 +1273,10 @@ socket.on("playerMoved", updateRemotePlayer);
 socket.on("playerProjectile", data => {
   if (!data?.origin || !data?.direction || !running || !networkRoomActive) return;
   const isShockwave=data.weaponId==="shockwave_revolver";
-  const bullet = makeBullet(isShockwave?0x69d9ff:(data.weaponId === "admin_gun" ? 0xffffff : 0xffdf67));
+  const isFrost=data.weaponId==="frost_ray";
+  const bullet = makeBullet(isFrost?0x9fe8ff:isShockwave?0x69d9ff:(data.weaponId === "admin_gun" ? 0xffffff : 0xffdf67));
   if(isShockwave)bullet.scale.setScalar(1.8);
+  if(isFrost)bullet.scale.setScalar(1.6);
   bullet.position.set(data.origin.x, data.origin.y, data.origin.z);
   scene.add(bullet);
   const direction = new THREE.Vector3(
@@ -2534,6 +2548,16 @@ cylinderPart(smgModel,.035,.035,.45,0x171a1d,.36,-.26,-1.32,[Math.PI/2,0,0],10,{
 boxPart(smgModel,.2,.15,.28,0x3b424b,.36,-.27,-.31);
 boxPart(smgModel,.12,.09,.18,0x171a1d,.36,-.12,-.31,{keepDark:true});
 
+// Frost Ray: icy ray gun with a coolant canister and a glowing emitter ring.
+const frostModel=makeWeaponModel("frost_ray");
+boxPart(frostModel,.22,.2,.7,0x2f5f7a,.36,-.27,-.8);
+boxPart(frostModel,.14,.1,.42,0x8fd8ff,.36,-.15,-.84);
+const frostMagazine=boxPart(frostModel,.14,.26,.17,0x1d3f52,.36,-.5,-.66);
+boxPart(frostModel,.15,.3,.18,0x2f5f7a,.36,-.5,-.5,{rotation:[-.15,0,0]});
+cylinderPart(frostModel,.05,.1,.55,0x5ec8ff,.36,-.26,-1.3,[Math.PI/2,0,0],14);
+modelPart(frostModel,new THREE.TorusGeometry(.115,.022,8,20),0xbdf1ff,.36,-.26,-1.58,{skinable:false});
+modelPart(frostModel,new THREE.TorusGeometry(.085,.018,8,20),0xbdf1ff,.36,-.26,-1.2,{skinable:false});
+
 // Bolt-action sniper: long barrel, stock, 5-round magazine, bolt handle and optical scope.
 const sniperModel=makeWeaponModel("sniper");
 boxPart(sniperModel,.24,.19,.92,0x303740,.36,-.28,-.83);
@@ -2572,7 +2596,7 @@ muzzle.visible=false;
 gunGroup.add(muzzle);
 function showWeaponModel(id){
  Object.entries(weaponModels).forEach(([key,group])=>{group.visible=key===id || (id==="admin_gun" && key==="assault_rifle");});
- const muzzleZ={assault_rifle:-1.65,pistol:-1.36,shockwave_revolver:-1.58,smg:-1.57,sniper:-2.38};
+ const muzzleZ={assault_rifle:-1.65,pistol:-1.36,shockwave_revolver:-1.58,smg:-1.57,sniper:-2.38,frost_ray:-1.65};
  muzzle.position.z=muzzleZ[id] ?? -1.65;
 }
 showWeaponModel("assault_rifle");
@@ -2585,6 +2609,7 @@ const reloadParts={
  shockwave_revolver:{cylinder:shockwaveCylinder},
  smg:{magazine:smgMagazine},
  sniper:{magazine:sniperMagazine},
+ frost_ray:{magazine:frostMagazine},
  admin_gun:{magazine:rifleMagazine}
 };
 const reloadPartBases={};
@@ -2630,6 +2655,15 @@ let yaw=0,pitch=0,locked=false;
 let keys={},mouseDown=false,aiming=false;
 let onGround=true,jumpVelocity=0;
 let shootCooldown=0,recoil=0,toastTime=0;
+let slowUntil=0; // performance.now() time when a Frost Ray slow ends
+function applySlow(ms){
+ slowUntil=performance.now()+ms;
+ const overlay=document.getElementById("frostOverlay");
+ if(overlay){overlay.style.display="block";clearTimeout(applySlow.timer);applySlow.timer=setTimeout(()=>{overlay.style.display="none";},ms);}
+ showToast("FROZEN! YOU'RE SLOWED");
+}
+socket.on("playerSlowed",data=>applySlow(Number(data?.ms)||3500));
+socket.on("slowHit",()=>{document.getElementById("hitmarker").style.opacity=1;hitmarkerTime=.12;});
 let shockwavePush=new THREE.Vector3();
 const shockwaveEffects=[];
 const walls=[],stairs=[],bullets=[],ramps=[];
@@ -2704,6 +2738,7 @@ const WEAPON_STATS = {
  shockwave_revolver:{name:"SHOCKWAVE REVOLVER",mag:4,reserve:12,cooldown:.85,damage:0,speed:42,reloadTime:1500},
  smg:{name:"SMG",mag:30,reserve:120,cooldown:.075,damage:15,speed:82,reloadTime:1300},
  sniper:{name:"BOLT-ACTION SNIPER",mag:5,reserve:25,cooldown:1.25,damage:200,speed:190,reloadTime:2200},
+ frost_ray:{name:"FROST RAY",mag:10,reserve:50,cooldown:.6,damage:0,speed:100,reloadTime:1400},
  admin_gun:{name:"ADMIN GUN",mag:60,reserve:300,cooldown:.025,damage:45,speed:120,reloadTime:1300}
 };
 let activeWeaponSlot="primary";
@@ -2716,12 +2751,13 @@ function weaponStats(){return WEAPON_STATS[equippedWeaponId()] || WEAPON_STATS.a
 function applyWeaponSkin(){
  const skin=currentLoadout.skin || "default";
  const adminSkin=skin==="admin";
- const palette={default:0x252a30,abyss:0x2456a8,neon:0x22d3c5,crimson:0xb51f38,arctic:0xdcecff,admin:0x080808};
+ const snowSkin=skin==="snow_camo";
+ const palette={default:0x252a30,abyss:0x2456a8,neon:0x22d3c5,crimson:0xb51f38,arctic:0xdcecff,snow_camo:0xffffff,admin:0x080808};
  const color=palette[skin] ?? palette.default;
  Object.values(weaponModels).forEach(group=>group.traverse(obj=>{
   if(!obj.isMesh || !obj.userData.skinable || obj.material?.map) return;
   if(!obj.userData.baseMaterial){obj.userData.baseMaterial=obj.material;obj.material=obj.material.clone();}
-  if(obj.userData.keepDark){obj.material.color.setHex(adminSkin?0xf2f2f2:0x171a1d);}
+  if(obj.userData.keepDark){obj.material.color.setHex(adminSkin?0xf2f2f2:snowSkin?0xffffff:0x171a1d);}
   else obj.material.color.setHex(color);
  }));
  adminLabels.forEach(label=>{label.visible=adminSkin && weaponModels.assault_rifle.visible;});
@@ -2878,7 +2914,9 @@ function shoot(){
  const direction=new THREE.Vector3();
  camera.getWorldDirection(direction);
  const isShockwave=equippedWeaponId()==="shockwave_revolver";
- const bullet=makeBullet(isShockwave?0x69d9ff:(stats.name==="ADMIN GUN"?0xffffff:0xffdf67));
+ const isFrost=equippedWeaponId()==="frost_ray";
+ const bullet=makeBullet(isFrost?0x9fe8ff:isShockwave?0x69d9ff:(stats.name==="ADMIN GUN"?0xffffff:0xffdf67));
+ if(isFrost)bullet.scale.setScalar(1.6);
  if(isShockwave){
   bullet.scale.setScalar(1.8);
   bullet.material=bullet.material.clone();
@@ -2886,7 +2924,7 @@ function shoot(){
  }
  bullet.position.copy(camera.position).add(direction.clone().multiplyScalar(1.2));
  scene.add(bullet);
- bullets.push({mesh:bullet,velocity:direction.clone().multiplyScalar(stats.speed),life:3,owner:"player",kind:isShockwave?"shockwave":"bullet",damage:stats.damage});
+ bullets.push({mesh:bullet,velocity:direction.clone().multiplyScalar(stats.speed),life:3,owner:"player",kind:isShockwave?"shockwave":"bullet",damage:stats.damage,slow:isFrost});
  if(networkRoomActive && socket.connected) {
   const origin=camera.position.clone();
   socket.emit("shootPlayer", {
@@ -3279,7 +3317,7 @@ function update(dt){
 
   if(movement.length()>0){
    movement.normalize();
-   const speed=keys.shift?17:10;
+   const speed=(keys.shift?17:10)*(performance.now()<slowUntil?.5:1);
    movePlayer(movement.x*speed*dt,movement.z*speed*dt);
   }
 
@@ -3324,12 +3362,13 @@ function update(dt){
     const diff=player.position.clone().sub(enemy.position);
     diff.y=0;
     const d=diff.length();
+    const slowFactor=performance.now()<(u.slowUntil||0)?.45:1;
     if(d>9){
      diff.normalize();
-     enemy.position.addScaledVector(diff,u.speed*step);
+     enemy.position.addScaledVector(diff,u.speed*slowFactor*step);
     }else{
      const side=new THREE.Vector3(-diff.z,0,diff.x).normalize();
-     enemy.position.addScaledVector(side,u.speed*.5*step);
+     enemy.position.addScaledVector(side,u.speed*.5*slowFactor*step);
     }
     enemy.lookAt(player.position.x,enemy.position.y,player.position.z);
     u.fire-=step;
@@ -3403,9 +3442,11 @@ function bulletHitsBuiltStructure(from,to){
     const target=enemy.position.clone().add(new THREE.Vector3(0,1.4,0));
     if(b.mesh.position.distanceTo(target)<1.3){
      if(networkRoomActive && socket.connected && enemy.userData.serverId) {
-      socket.emit("damageBot",{id:enemy.userData.serverId,amount:b.damage||25});
+      socket.emit("damageBot",{id:enemy.userData.serverId,amount:b.damage??25,slow:!!b.slow});
+     } else if(b.slow){
+      enemy.userData.slowUntil=performance.now()+3500;
      } else {
-      damageEnemy(enemy,b.damage||25);
+      damageEnemy(enemy,b.damage??25);
      }
      b.life=0;
      document.getElementById("hitmarker").style.opacity=1;
